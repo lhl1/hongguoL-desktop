@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+export async function runSeriesSmoke({evaluate,until,click,change,wheel,shot,playing,contextFavorite,setPlaybackDelay=()=>{}}){
+ await until('document.querySelector("#query")');await click('[data-view="explore"]');await change('#query','万妖国录传');await evaluate('document.querySelector(".search-form").requestSubmit()');
+ await until('document.querySelector(".search-family")?.querySelectorAll(".card").length>=3');
+ const group=await evaluate('(()=>{const f=document.querySelector(".search-family");return{title:f.querySelector("h2").textContent,titles:[...f.querySelectorAll(".card h3")].map(x=>x.textContent),ids:[...f.querySelectorAll(".card")].map(x=>x.dataset.series)};})()');
+ assert.ok(group.titles[0].includes('第一季'));assert.ok(group.titles[1].includes('第二季'));assert.equal(new Set(group.ids).size,group.ids.length);
+ const favorite=await contextFavorite('.search-family .card');await shot('series-search');
+ await click('.search-family .card');await until('document.querySelector(".player-overlay")?.dataset.series==='+JSON.stringify(group.ids[0])+' && '+playing);await click('[aria-label="选集"]');
+ await until('document.querySelectorAll(".season-button").length==='+group.ids.length);await shot('series-drawer');
+ setPlaybackDelay(1200);await click('.season-button[data-series="'+group.ids[1]+'"]');await until('document.querySelector(".season-button.selected")?.textContent.includes("正在切换")',3000);
+ const immediate=await evaluate('({pending:document.querySelector(".season-button.selected").dataset.series,playing:document.querySelector(".player-overlay").dataset.series,busy:document.querySelector(".player-overlay").dataset.busy})');assert.equal(immediate.pending,group.ids[1]);assert.equal(immediate.playing,group.ids[0]);
+ await until('document.querySelector(".player-overlay")?.dataset.series==='+JSON.stringify(group.ids[1])+' && '+playing);setPlaybackDelay(0);
+ const directory=await evaluate('({title:document.querySelector(".drama-overview h2").textContent,count:document.querySelectorAll(".episode-grid button").length})');assert.ok(directory.title.includes('第二季'));assert.ok(directory.count>6);
+ await wheel(120,15,'.season-list');await wheel(120,15,'.episode-drawer');assert.equal(await evaluate('document.querySelector(".player-overlay").dataset.series'),group.ids[1]);assert.equal(await evaluate('document.querySelector(".player-overlay").dataset.episode'),'1');
+ await click('.episode-grid button[aria-label="第 6 集"]');await until('document.querySelector(".player-overlay").dataset.episode==="6" && '+playing);
+ await click('.season-button[data-series="'+group.ids[0]+'"]');await until('document.querySelector(".player-overlay").dataset.series==='+JSON.stringify(group.ids[0])+' && '+playing);assert.equal(await evaluate('document.querySelector(".player-overlay").dataset.episode'),'1');
+ await click('.season-button[data-series="'+group.ids[1]+'"]');await until('document.querySelector(".player-overlay").dataset.series==='+JSON.stringify(group.ids[1])+' && document.querySelector(".player-overlay").dataset.episode==="6" && '+playing);
+ if(group.ids.length>2){setPlaybackDelay(1500);await click('.season-button[data-series="'+group.ids[2]+'"]');await until('document.querySelector(".season-button.selected")?.dataset.series==='+JSON.stringify(group.ids[2]));await click('.season-button[data-series="'+group.ids[0]+'"]');await until('document.querySelector(".player-overlay").dataset.series==='+JSON.stringify(group.ids[0])+' && '+playing);setPlaybackDelay(0);await new Promise(r=>setTimeout(r,1700));assert.equal(await evaluate('document.querySelector(".player-overlay").dataset.series'),group.ids[0]);}
+ setPlaybackDelay(1500);await click('.season-button[data-series="'+group.ids[1]+'"]');await until('document.querySelector(".season-button.selected")?.dataset.series==='+JSON.stringify(group.ids[1]));await click('.season-button[data-series="'+group.ids[0]+'"]');await until('document.querySelector(".player-overlay").dataset.series==='+JSON.stringify(group.ids[0])+' && '+playing);setPlaybackDelay(0);await new Promise(r=>setTimeout(r,1700));assert.equal(await evaluate('document.querySelector(".player-overlay").dataset.series'),group.ids[0]);
+ await shot('series-playback');await click('.drawer-heading [aria-label="收起选集"]');await click('.back-button');
+ return{group,realPlayback:true,immediate,directory,drawerScrollNoSwitch:true,independentSeasonResume:true,staleSeasonRequestIgnored:true,returnToPlayingSeasonCancelsPending:true,rightClickFavorite:favorite};
+}

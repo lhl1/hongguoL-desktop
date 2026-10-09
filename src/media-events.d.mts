@@ -1,0 +1,1 @@
+export function isCurrentMediaError(slot:number,entry:{serial:number;play:{url:string}}|undefined,pending:{slot:number;serial:number}|undefined,renderedSerial:number|undefined,source:string|null,error:MediaError|null):boolean;

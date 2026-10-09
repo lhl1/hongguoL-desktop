@@ -1,0 +1,46 @@
+# Dependencies and generated builds
+node_modules/
+dist/
+release*/
+archive/
+target/
+native-adapter/target/
+
+# Locally supplied third-party runtime; never publish via git
+native-resources/
+native-resources-macos/
+*.apk
+*.xapk
+*.aar
+*.jar
+*.so
+*.dll
+*.exe
+*.dmg
+*.zip
+
+# Private research, profiles, diagnostics, fixtures and backups
+analysis/
+backups/
+test-results*/
+*.private.*
+*.log
+*.bin
+*.tmp
+.env
+.env.*
+!.env.example
+preferences-v*.json
+library-v*.json
+account-v*.json
+Cookies
+Login Data
+msconfig*.json
+*.heic
+*.heif
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

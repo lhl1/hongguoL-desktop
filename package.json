@@ -1,0 +1,62 @@
+{
+  "name": "hongguo-desktop",
+  "version": "2.3.4",
+  "private": true,
+  "description": "Independent Electron desktop reconstruction with APK API adapters, dynamic catalogs and video playback",
+  "author": "lhl1",
+  "type": "module",
+  "main": "electron/main.mjs",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "start": "node scripts/check-runtime.mjs && npm run build && electron .",
+    "test": "node --test tests/*.test.mjs",
+    "test:live": "node scripts/check-runtime.mjs && node scripts/native-live-check.mjs",
+    "test:desktop": "node scripts/check-runtime.mjs && npm run build && electron . --smoke-test",
+    "pack": "node scripts/check-runtime.mjs && npm run build && electron-builder --win --x64 --dir --publish never"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.9.3",
+    "vite": "8.3.3",
+    "electron": "44.6.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "local.hongguo.desktop.rebuild",
+    "productName": "红果 Windows",
+    "directories": {
+      "output": "release-2.3.4"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "native-resources",
+        "to": "apk-native",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "dir"
+      ],
+      "signExecutable": false
+    }
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lhl1/hongguoL-desktop.git"
+  }
+}
