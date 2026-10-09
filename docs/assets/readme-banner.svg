@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">HongguoL Desktop</title>
+  <desc id="desc">原创深色项目横幅，橙色播放标识与抽象桌面布局。独立桌面短剧客户端。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#171a21"/><stop offset="1" stop-color="#252a34"/></linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffad79"/><stop offset="1" stop-color="#ff7047"/></linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#20252e"/><stop offset="1" stop-color="#14171d"/></linearGradient>
+  </defs>
+  <rect width="1200" height="300" rx="24" fill="url(#bg)"/>
+  <circle cx="1120" cy="12" r="230" fill="#ff885d" opacity=".035"/>
+  <circle cx="900" cy="320" r="170" fill="#ff885d" opacity=".025"/>
+  <rect x="56" y="56" width="58" height="58" rx="18" fill="url(#accent)"/>
+  <path d="M78 71 97 85 78 99Z" fill="#fff"/>
+  <text x="56" y="168" fill="#f5f6f8" font-size="48" font-weight="700" font-family="Segoe UI,Arial,sans-serif">HongguoL Desktop</text>
+  <text x="58" y="209" fill="#aeb5c2" font-size="21" font-family="Segoe UI,Microsoft YaHei,sans-serif">独立桌面短剧客户端 · 找剧，选集，继续看</text>
+  <rect x="58" y="240" width="47" height="3" rx="1.5" fill="#ff8a60"/>
+  <text x="121" y="247" fill="#87909f" font-size="13" letter-spacing="2" font-family="Segoe UI,Arial,sans-serif">WINDOWS / ELECTRON / OPEN SOURCE</text>
+  <g transform="translate(793 48)">
+    <rect width="344" height="204" rx="16" fill="url(#screen)" stroke="#39414e"/>
+    <path d="M0 43h344M68 43v161" stroke="#333b48"/>
+    <circle cx="19" cy="22" r="4" fill="#ff8a60"/><circle cx="34" cy="22" r="4" fill="#4c5461"/><circle cx="49" cy="22" r="4" fill="#4c5461"/>
+    <rect x="85" y="18" width="54" height="7" rx="3.5" fill="#ff8a60"/>
+    <rect x="253" y="13" width="74" height="17" rx="8.5" fill="#2d3440"/>
+    <rect x="13" y="58" width="42" height="23" rx="7" fill="#ff8a60" opacity=".16"/>
+    <path d="M23 69h22M23 104h22M23 139h22M23 174h22" stroke="#747e8e" stroke-width="3" stroke-linecap="round"/>
+    <rect x="83" y="58" width="245" height="130" rx="10" fill="#101319"/>
+    <rect x="139" y="65" width="126" height="104" rx="8" fill="#29232a"/>
+    <path d="M192 100 215 116 192 132Z" fill="#ff956b"/>
+    <path d="M96 176h218" stroke="#3c414b" stroke-width="2" stroke-linecap="round"/>
+    <path d="M96 176h76" stroke="#ff956b" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>
