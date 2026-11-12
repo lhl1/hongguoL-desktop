@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('hongguo', Object.freeze({
   playback: (id, episode, startSeconds = 0, quality = 'highest') => invoke('catalog:playback', id, episode, startSeconds, quality),
   feed:(category,cursor) => invoke('catalog:feed',category,cursor),rankings:(selection,cursor)=>invoke('catalog:rankings',selection,cursor),
   mediaDiagnostics:()=>invoke('media:diagnostics'),
+  bufferState:url=>invoke('media:bufferState',url),
   exportLogs:()=>invoke('diagnostics:export'),logVideo:value=>invoke('diagnostics:video',value),
   release: url=>invoke('media:release',url),windowControl: action=>invoke('window:control',action),
   onWindow:callback=>{const listener=(_event,data)=>callback(data);ipcRenderer.on('window:changed',listener);return()=>ipcRenderer.removeListener('window:changed',listener);},

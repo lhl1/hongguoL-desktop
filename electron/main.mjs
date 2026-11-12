@@ -50,10 +50,10 @@ app.whenReady().then(async () => {
   provider.configureFetch(contentFetch);
   configurePassportFetch(createPassportFetch(net));
   apkSession = createApkSession({ resources, profile: path.join(app.getPath('userData'), 'apk-guest.bin'), fetcher: contentFetch, encode: value => encryptLocal(safeStorage, value), decode: value => safeStorage.decryptString(value), persistent:!useMacMedia,onDiagnostic:value=>diagnosticLog.record('guest',value) });
-  if(useMacMedia)mediaTransport=await createMacMediaTransport({stream:(...args)=>mediaBroker.stream(...args)});
+  mediaTransport=await createMacMediaTransport({stream:(...args)=>mediaBroker.stream(...args)});
   if(useMacMedia)sourceBridge=await createMacSourceBridge({fetcher:(url,options)=>net.fetch(url,options),onDiagnostic:value=>diagnosticLog.record('source',value)});
   const onDiagnostic=value=>{diagnosticLog.record('decoder',value);if(value.code&&process.platform==='darwin'&&!smoke){const file=path.join(app.getPath('home'),'Library/Logs/Hongguo/playback-diagnostics.json');diagnosticWrites=diagnosticWrites.then(async()=>{await fs.mkdir(path.dirname(file),{recursive:true});await fs.writeFile(file,JSON.stringify({version:app.getVersion(),platform:process.platform,arch:process.arch,decoder:value},null,2));}).catch(()=>{});}};
-  mediaBroker = createMediaBroker(resources,{...(mediaTransport?{baseURL:mediaTransport.baseURL,openSource:sourceBridge.open}:{}),onDiagnostic});
+  mediaBroker = createMediaBroker(resources,{...(mediaTransport?{baseURL:mediaTransport.baseURL,openSource:sourceBridge?.open}:{}),getAggressiveBuffer:()=>preferences.read().aggressiveBuffer,getTimelineMode:()=>preferences.read().autoNextMode==='seamless',onDiagnostic});
   imageBroker = createImageBroker(resources, contentFetch);
   provider.configurePlaybackAdapter(mediaBroker.create);
   session.defaultSession.webRequest.onBeforeSendHeaders({urls: ['https://*.qznovelvod.com/*', 'https://*.douyinvod.com/*', 'https://*.bytevod.com/*']}, (details, callback) => {
@@ -72,7 +72,7 @@ app.whenReady().then(async () => {
     if (!target.startsWith(root + path.sep) || !/\.(html|js|css|png|webp|svg|ico)$/.test(target)) return new Response('', { status: 403 });
     return net.fetch(pathToFileURL(target).href);
   });
-  const mediaPermission=(wc,permission,origin)=>permission==='fullscreen'||(wc===window?.webContents&&macMediaPermission(permission,origin,useMacMedia));
+  const mediaPermission=(wc,permission,origin)=>permission==='fullscreen'||(wc===window?.webContents&&macMediaPermission(permission,origin,!!mediaTransport));
   session.defaultSession.setPermissionRequestHandler((wc,permission,callback,details)=>callback(mediaPermission(wc,permission,details.requestingUrl||wc.getURL())));
   session.defaultSession.setPermissionCheckHandler((wc,permission,origin)=>mediaPermission(wc,permission,origin));
   const guestStore = createStore(app.getPath('userData')); let store = guestStore;
@@ -97,12 +97,13 @@ app.whenReady().then(async () => {
     }catch{diagnosticLog.record('lifecycle',{event:'export-failed',code:'WRITE_FAILED'});throw new Error('日志导出失败，请选择可写入的位置后重试');}finally{exportingLog=false;}
   }
   const handlers = {
-    'diagnostics:export':exportLog,'diagnostics:video':value=>{if(Date.now()-lastVideoLog<200&&value?.event!=='error')return;lastVideoLog=Date.now();diagnosticLog.record('video',value);},
+    'diagnostics:export':exportLog,'diagnostics:video':value=>{if(value?.event==='progress'&&Date.now()-lastVideoLog<1000)return;if(value?.event==='progress')lastVideoLog=Date.now();diagnosticLog.record('video',value);},
     'catalog:home': provider.home, 'catalog:search': provider.search, 'catalog:suggest':provider.suggest,
     'catalog:family':provider.family,'catalog:seriesGroups':provider.seriesGroups,
     'catalog:filterCatalog':async(...args)=>{if(smoke&&smokeFilterDelay)await new Promise(resolve=>setTimeout(resolve,smokeFilterDelay));return provider.filterCatalog(...args);},'catalog:actorWorks':provider.actorWorks,
     'catalog:detail':async(...args)=>{const fail=smoke&&smokeDetailFailure;if(smoke&&smokeDetailDelay)await new Promise(resolve=>setTimeout(resolve,smokeDetailDelay));if(fail)throw new Error('测试模拟：详情请求失败');return provider.detail(...args);}, 'catalog:playback': async(...args)=>{const fail=smoke&&smokePlaybackFailureEpisode>0&&args[1]===smokePlaybackFailureEpisode;if(fail)smokePlaybackFailureEpisode=0;if(smoke&&smokePlaybackDelay)await new Promise(resolve=>setTimeout(resolve,smokePlaybackDelay));if(fail)throw new Error('测试模拟：目标视频请求失败');return provider.playback(...args);},
     'catalog:feed':async(...args)=>{if(smoke&&smokeFeedDelay)await new Promise(resolve=>setTimeout(resolve,smokeFeedDelay));return provider.feed(...args);},'catalog:rankings':async(...args)=>{if(smoke&&smokeRankingDelay)await new Promise(resolve=>setTimeout(resolve,smokeRankingDelay));return provider.rankings(...args);},'media:release':mediaBroker.release,'media:diagnostics':()=>{const status=mediaBroker.status();return{...status,message:decoderMessage(status.last?.code)};},
+    'media:bufferState':mediaBroker.bufferState,
     'window:control':controlWindow,
     'library:read': () => store.read(), 'library:favorite': v => store.favorite(v),
     'library:progress': v => { const result = store.progress(v); scheduleSync(); return result; }, 'library:clearHistory': () => store.clearHistory(),
@@ -114,7 +115,7 @@ app.whenReady().then(async () => {
   for (const [channel, handler] of Object.entries(handlers)) ipcMain.handle(channel, async (event, ...args) => {
     if (event.sender !== window?.webContents || event.senderFrame !== event.sender.mainFrame || !event.senderFrame.url.startsWith('app://desktop/')) throw new Error('拒绝非应用页面调用');
     const started=performance.now();
-    try { const data=await handler(...args);diagnosticLog.record('ipc',{channel,ok:true,ms:performance.now()-started});return { ok: true, data }; }
+    try { const data=await handler(...args);if(channel!=='media:bufferState')diagnosticLog.record('ipc',{channel,ok:true,ms:performance.now()-started});return { ok: true, data }; }
     catch (error) { diagnosticLog.record('ipc',{channel,ok:false,ms:performance.now()-started});return { ok: false, error: error instanceof Error ? error.message : '操作失败，请重试' }; }
   });
   window = new BrowserWindow({ width: 1240, height: 860, minWidth: 780, minHeight: 620, frame:false, show: !smoke, autoHideMenuBar: true, title: process.platform === 'darwin' ? '红果 · macOS' : '红果 · Windows', backgroundColor: nativeTheme.shouldUseDarkColors ? '#16181d' : '#f6f7f9', webPreferences: { preload: path.join(directory, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true, offscreen: smoke, backgroundThrottling: !smoke, autoplayPolicy: 'no-user-gesture-required' } });
@@ -132,7 +133,7 @@ app.whenReady().then(async () => {
   diagnosticLog.record('lifecycle',{event:'ready'});
   if (!smoke) scheduleSync();
   if (smoke) {
-    const { runSmoke } = await import(process.argv.includes('--official-filter-smoke-only')?'./official-filter-smoke.mjs':process.argv.includes('--episode-selection-smoke-only')?'./episode-selection-smoke.mjs':process.argv.includes('--preview-smoke-only')?'./preview-smoke.mjs':process.argv.includes('--ui-smoke-only')?'./ui-smoke.mjs':process.argv.includes('--rank-filter-smoke-only')?'./smoke-rank15.mjs':'./smoke.mjs');
+    const { runSmoke } = await import(process.argv.includes('--gapless-smoke-only')?'./gapless-smoke.mjs':process.argv.includes('--seamless-smoke-only')?'./seamless-smoke.mjs':process.argv.includes('--buffering-smoke-only')?'./buffering-smoke.mjs':process.argv.includes('--playback-recovery-smoke-only')?'./playback-recovery-smoke.mjs':process.argv.includes('--official-filter-smoke-only')?'./official-filter-smoke.mjs':process.argv.includes('--episode-selection-smoke-only')?'./episode-selection-smoke.mjs':process.argv.includes('--preview-smoke-only')?'./preview-smoke.mjs':process.argv.includes('--ui-smoke-only')?'./ui-smoke.mjs':process.argv.includes('--rank-filter-smoke-only')?'./smoke-rank15.mjs':'./smoke.mjs');
     const testFolder = smoke && process.env.HONGGUO_SMOKE_OUTPUT ? path.resolve(process.env.HONGGUO_SMOKE_OUTPUT) : app.isPackaged ? path.join(process.env.PORTABLE_EXECUTABLE_DIR || path.dirname(app.getPath('exe')), 'test-results') : path.resolve(directory, '../test-results');
     const diagnosticTimer=setInterval(()=>{void fs.mkdir(testFolder,{recursive:true}).then(()=>fs.writeFile(path.join(testFolder,'safe-media-diagnostics.json'),JSON.stringify({broker:mediaBroker.status(),http:mediaTransport?.status()},null,2))).catch(()=>{});},2000);diagnosticTimer.unref();app.once('will-quit',()=>clearInterval(diagnosticTimer));
     try { await runSmoke(window, testFolder,{setDetailDelay:ms=>{smokeDetailDelay=ms;},setDetailFailure:value=>{smokeDetailFailure=value;},setFilterDelay:ms=>{smokeFilterDelay=ms;},windowActions:controls.audit,mediaStatus:mediaBroker.status,setPlaybackDelay:ms=>{smokePlaybackDelay=ms;},setPlaybackFailure:episode=>{smokePlaybackFailureEpisode=episode;},setRankingDelay:ms=>{smokeRankingDelay=ms;},setFeedDelay:ms=>{smokeFeedDelay=ms;}}); mediaTransport?.close(); mediaBroker.close(); imageBroker.close(); apkSession.close(); app.exit(0); }

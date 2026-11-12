@@ -70,3 +70,8 @@
 @keyframes preview-enter{from{opacity:0}to{opacity:1}}
 
 .rank-card>div:nth-child(2){flex:1;min-width:0}.catalog-grid[data-layout=list] .card h3{min-height:0}
+.video-window-drag{position:absolute;z-index:3;background:transparent;user-select:none;-webkit-app-region:drag;app-region:drag}
+.video-window-drag.drag-top{inset:0 0 auto;height:clamp(96px,20vh,168px)}
+.video-window-drag.drag-left,.video-window-drag.drag-right{top:clamp(96px,20vh,168px);bottom:116px;height:auto;width:clamp(44px,8vw,110px)}
+.video-window-drag.drag-left{left:0;right:auto}.video-window-drag.drag-right{right:0;left:auto}
+.video-controls,.video-controls *,.player-floating-top button,.episode-drawer,.episode-drawer *,.big-play,.video-message,.video-message *,.select-popover,.select-popover *{-webkit-app-region:no-drag;app-region:no-drag}

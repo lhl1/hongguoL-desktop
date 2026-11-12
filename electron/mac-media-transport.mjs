@@ -1,7 +1,7 @@
 import http from 'node:http';
 import {Readable} from 'node:stream';
 
-// Mac Chromium receives a normal local HTTP MP4 stream instead of an app-scheme Response.
+// Chromium receives a normal local HTTP MP4 stream instead of an app-scheme Response.
 // No assets, remote URLs, credentials, or keys are served by this endpoint.
 export async function createMacMediaTransport({stream}) {
  const sockets=new Set();let port;const audit={requests:0,rejectedHost:0,rejectedOrigin:0,rejectedPath:0,rejectedMethod:0,responses:{}};

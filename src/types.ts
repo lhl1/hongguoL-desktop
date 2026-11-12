@@ -5,14 +5,14 @@ export interface Progress extends Series { episode: number; seconds: number; upd
 export interface Library { version: number; favorites: Series[]; history: Progress[] }
 export interface Home { fetchedAt: number; sections: {key: string; title: string; items: Series[]}[]; banners: Series[] }
 export interface Search { query: string; items: Series[]; total: number; hasMore:boolean;cursor:string }
-export interface Playback { seriesId: string; episode: number; videoId: string; url: string; poster: string; duration: number; width: number; height: number; quality: string; qualities:{id:string;label:string}[]; fetchedAt: number; startSeconds?: number; localDecoded?: boolean }
+export interface Playback { seriesId: string; episode: number; videoId: string; url: string; poster: string; duration: number; width: number; height: number; quality: string; qualities:{id:string;label:string}[]; fetchedAt: number; expiresAt?: number; startSeconds?: number; localDecoded?: boolean;timeline?:boolean }
 export interface FilterRow {title:string;type?:string;selectionType?:number;limit?:number;refreshOthers?:boolean;items:FilterItem[]}
 export interface FilterItem {id:string;title:string;selected:boolean;children:FilterItem[];filters:FilterRow[];background?:FilterRow[];description?:string;exclusive?:boolean;rows?:FilterRow[]}
 export interface Actor {id:string;name:string;cover:string;intro:string;tags:string[];metric:string}
 export interface Page {items:Series[];hasMore:boolean;cursor:string;filters:FilterItem[];actors?:Actor[];rows?:FilterRow[];order?:FilterRow[];categoryTabs?:{id:number;title:string;selected:boolean}[];categoryType?:number;filterContext?:string;selectedFilters?:Record<string,string[]>;maxExpand?:number}
 export interface WindowState {mode:'normal'|'window';fullscreen:boolean;maximized:boolean}
 export type Result<T> = {ok: true; data: T} | {ok: false; error: string};
-export interface Preferences { theme: 'system'|'light'|'dark'; resolvedTheme: 'light'|'dark'; homeAutoplay: boolean; autoplay: boolean; defaultSpeed: number; autoNext: boolean; defaultMode: 'normal'|'window'; volume: number; defaultQuality:string; previewBeforePlay:boolean; defaultCatalogLayout:'grid'|'list' }
+export interface Preferences { theme: 'system'|'light'|'dark'; resolvedTheme: 'light'|'dark'; homeAutoplay: boolean; autoplay: boolean; defaultSpeed: number; autoNext: boolean; defaultMode: 'normal'|'window'; volume: number; defaultQuality:string; previewBeforePlay:boolean; defaultCatalogLayout:'grid'|'list';aggressiveBuffer:boolean;autoNextMode:'seamless'|'turn' }
 export interface Account { loggedIn: boolean; user: {userId: string; name: string}|null; retryAt: number; sync: {state: string; at: number; message?: string; downloaded?: number; uploaded?: number} }
 export interface API {
   readonly platform: string;
@@ -25,8 +25,9 @@ export interface API {
   filterCatalog(selection?:{context?:string;selectItems?:Record<string,string[]>},cursor?:string):Promise<Result<Page>>;
   actorWorks(id:string,cursor?:string):Promise<Result<Page>>;
   mediaDiagnostics():Promise<Result<{message:string;last?:{code?:string}}>>;
+  bufferState(url:string):Promise<Result<{exists:boolean;finished:boolean;decodedSeconds:number}>>;
   exportLogs():Promise<Result<{canceled:boolean;filename?:string}>>;
-  logVideo(value:{event:string;error?:number;ready?:number;network?:number;width?:number;height?:number;seconds?:number}):Promise<Result<void>>;
+  logVideo(value:{event:string;error?:number;ready?:number;network?:number;width?:number;height?:number;seconds?:number;role?:'active'|'preload';bufferAhead?:number;rate?:number;frames?:number;dropped?:number;timelineSeconds?:number}):Promise<Result<void>>;
   release(url:string):Promise<Result<void>>;windowControl(action:string):Promise<Result<WindowState>>;onWindow(callback:(v:WindowState)=>void):()=>void;
   library(): Promise<Result<Library>>; favorite(item: Series): Promise<Result<Library>>;
   progress(item: Series & {episode: number; seconds: number}): Promise<Result<Library>>;

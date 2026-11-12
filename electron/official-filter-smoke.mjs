@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';import assert from 'node:assert/strict';
 export async function runSmoke(window,folder,{setDetailDelay=()=>{},setDetailFailure=()=>{},setFilterDelay=()=>{}}={}){
- await fs.mkdir(folder,{recursive:true});const out={version:'2.3.4',hidden:true,muted:true,online:true,simulatedLatencyAndFailure:true,realLoginVerified:false,realCloudSyncVerified:false,nativeWindowTransitionsVerified:false};
+ await fs.mkdir(folder,{recursive:true});const out={version:'2.3.8',hidden:true,muted:true,online:true,simulatedLatencyAndFailure:true,realLoginVerified:false,realCloudSyncVerified:false,nativeWindowTransitionsVerified:false};
  const evaluate=code=>window.webContents.executeJavaScript(code,true),delay=ms=>new Promise(r=>setTimeout(r,ms));
  const shot=async name=>{assert.equal(window.isVisible(),false);await fs.writeFile(folder+'/'+name+'.png',(await window.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  async function until(code){const start=Date.now();while(Date.now()-start<70000){if(await evaluate(code))return;await delay(100);}await shot('timeout');await fs.writeFile(folder+'/timeout-dom.txt',await evaluate('document.body.innerText'));throw new Error('Timeout '+code);}

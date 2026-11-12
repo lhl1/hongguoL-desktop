@@ -1,6 +1,6 @@
 {
   "name": "hongguo-desktop",
-  "version": "2.3.4",
+  "version": "2.3.8",
   "private": true,
   "description": "Independent Electron desktop reconstruction with APK API adapters, dynamic catalogs and video playback",
   "author": "lhl1",
@@ -12,7 +12,9 @@
     "test": "node --test tests/*.test.mjs",
     "test:live": "node scripts/check-runtime.mjs && node scripts/native-live-check.mjs",
     "test:desktop": "node scripts/check-runtime.mjs && npm run build && electron . --smoke-test",
-    "pack": "node scripts/check-runtime.mjs && npm run build && electron-builder --win --x64 --dir --publish never"
+    "pack": "node scripts/check-runtime.mjs && npm run build && electron-builder --win --x64 --dir --publish never",
+    "test:gapless": "node scripts/check-runtime.mjs && npm run build && electron . --smoke-test --gapless-smoke-only",
+    "test:audio": "electron scripts/audio-pcm-check.cjs"
   },
   "dependencies": {
     "react": "19.3.0",
@@ -30,7 +32,7 @@
     "appId": "local.hongguo.desktop.rebuild",
     "productName": "红果 Windows",
     "directories": {
-      "output": "release-2.3.4"
+      "output": "release-2.3.8"
     },
     "files": [
       "dist/**/*",

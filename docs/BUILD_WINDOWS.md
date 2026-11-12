@@ -21,7 +21,7 @@ npm test
 - 可使用的原 APK，包含 `lib/arm64-v8a/libmetasec_ml.so` 和 `lib/arm64-v8a/libEncryptor.so`。
 - 与此 APK 配套的 MetaSec SDK 配置数组 JSON。数组第 6、7、8、9、13 项为运行身份相关字段，准备脚本会清空；不要使用他人的设备/账号配置。配置获取和合法使用由用户自行准备，仓库不提供或硬编码该配置。
 - 完整 Windows JDK 17，含 `javac.exe` 与 `jlink.exe`。
-- Windows x64 FFmpeg，具备 H.264/AAC 解码、MP4 输入和流输出能力；使用前核对其来源、构建配置和许可证。
+- Windows x64 FFmpeg，具备源片解码、libx264 H.264 编码、FLAC 48kHz 双声道编码、MP4 分片输出能力；旧翻动方式仍使用 AAC 输出；使用前核对其来源、构建配置和许可证。
 - Maven 可解析 `native-adapter/pom.xml` 的 unidbg 0.9.9 等依赖。
 
 准备脚本只写入项目 `native-resources` 与 `native-adapter/target`。资源目录存在时拒绝覆盖；先自行备份并移开旧目录。脚本不要求管理员，不修改系统 PATH、全局代理、证书或系统主题，JAVA_HOME 仅在子进程构建期间临时使用后恢复。
@@ -61,7 +61,7 @@ npm start
 npm run pack
 ```
 
-输出 `release-2.3.4/win-unpacked/`。发布目录不会被 Git 跟踪。要发布含第三方资源的二进制，需另行确认使用/分发条件；本次 GitHub 开源只发布源码。
+输出 `release-2.3.8/win-unpacked/`。发布目录不会被 Git 跟踪。要发布含第三方资源的二进制，需另行确认使用/分发条件；本次 GitHub 开源只发布源码。
 
 ## 4. 集成验证
 
@@ -71,5 +71,13 @@ npm run test:desktop
 ```
 
 真实服务可能因版本、网络、风控或服务变化拒绝请求，失败时不能伪造游客身份或绕过授权。桌面测试隐藏、静音；只模拟窗口状态，不为了测试激活全屏窗口影响工作。
+
+## 5. 无感连播专项检查
+
+准备好完整运行资源后，`npm run test:gapless` 会隐藏、静音地请求真实服务并检查连续三次自然集间切换、暂停续播、关闭自动下一集及手动选集。它会访问网络，不能用于声称离线验证。
+
+`npm run test:audio` 只需要依赖中的 Electron 和自行提供的 `native-resources/media/ffmpeg.exe`，不需要 APK/JNI 或账号。脚本在内存中生成三段测试视频，以 AudioWorklet 采集静音输出前的合成 PCM，比较两处接点的新增／丢失采样；中间一段改变分辨率和帧率。没有捕获真实剧集声音，也不会通过扬声器播放。报告为 `test-results-2.3.8/audio-pcm/audio-pcm.json`，不进入 Git。
+
+标准 `npm test` 不访问真实服务。缺少 FFmpeg 时，涉及真实分片编码的测试跳过；HEIC 测试也仅在显式提供本地样本时运行。
 
 可选的本地图像集成测试：提供自己可以使用的 HEIC 测试文件，设置当前进程的 `HONGGUO_HEIC_FIXTURE` 环境变量后执行 `npm test`。不要将该样本/日志上传到仓库。
